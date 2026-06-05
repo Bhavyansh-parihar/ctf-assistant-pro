@@ -1,0 +1,12 @@
+flask
+flask-cors
+anthropic
+paramiko
+requests
+urllib3
+dnspython
+python-whois
+gmpy2
+sympy
+pycryptodome
+python-dotenv

